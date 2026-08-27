@@ -4,6 +4,7 @@ from sqlalchemy import text
 from app.core.database import engine
 from app.api.events import router as events_router
 from app.api.reservations import router as reservations_router
+from app.api.orders import router as orders_router
 
 app = FastAPI(
     title="Autoscaling Ticket Reservation Platform"
@@ -11,6 +12,7 @@ app = FastAPI(
 
 app.include_router(events_router)
 app.include_router(reservations_router)
+app.include_router(orders_router)
 
 @app.get("/health")
 async def health() -> dict[str, str]:
