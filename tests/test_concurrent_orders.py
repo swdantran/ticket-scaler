@@ -3,7 +3,7 @@ import httpx
 
 API_URL = "http://127.0.0.1:8000/orders"
 
-RESERVATION_ID = "6cdfa74a-01d4-4fd4-a9ae-5dd5011adeb4"
+RESERVATION_ID = "6ce9239b-49ce-404a-9794-413f3800b0cd"
 
 async def checkout(client: httpx.AsyncClient, request_number: int):
     response = await client.post(
@@ -35,7 +35,7 @@ async def main():
 
     for request_number, status_code, body in results:
         if status_code in (200, 201):
-            succes_count += 1
+            success_count += 1
         else:
             errors += 1
             print("Unexpected:", request_number, status_code, body)
