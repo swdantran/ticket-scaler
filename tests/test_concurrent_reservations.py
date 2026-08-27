@@ -31,7 +31,7 @@ async def main():
     conflict_count = 0
 
     for status_code, body in results:
-        if status_code == 200:
+        if status_code == 201:
             success_count += 1
         elif status_code == 409:
             conflict_count += 1

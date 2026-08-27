@@ -17,7 +17,7 @@ class ReservationRequest(BaseModel):
     seat_id: int
     user_id: str
 
-@router.post("")
+@router.post("", status_code=201)
 async def create_reservation(
     request: ReservationRequest,
     db: AsyncSession = Depends(get_db),
@@ -25,6 +25,22 @@ async def create_reservation(
     reservation_id = uuid4()
 
     async with db.begin():
+
+        await db.execute(
+            text(
+                """
+                UPDATE reservations
+                SET status = 'EXPIRED'
+                WHERE seat_id = :seat_id
+                    AND status = 'ACTIVE'
+                    AND expires_at <= NOW();
+                    """
+            ),
+            {
+                "seat_id": request.seat_id,
+            },
+        )
+
         seat_result = await db.execute(
             text(
                 """
@@ -34,7 +50,13 @@ async def create_reservation(
                     reserved_by = :user_id,
                     reservation_expires_at = NOW() + INTERVAL '5 minutes'
                 WHERE id = :seat_id
-                  AND status = 'AVAILABLE'
+                  AND (
+                  status = 'AVAILABLE'
+                  OR (
+                        status = 'RESERVED'
+                        AND reservation_expires_at <= NOW()
+                        )
+                        )
                 RETURNING
                     id,
                     reservation_expires_at;
