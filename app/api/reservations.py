@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.rate_limit import check_rate_limit
+from app.core.admission import check_admission
 
 
 router = APIRouter(
@@ -24,6 +25,7 @@ async def create_reservation(
     db: AsyncSession = Depends(get_db),
 ):
     await check_rate_limit(request.user_id)
+    await check_admission()
     reservation_id = uuid4()
 
     async with db.begin():
