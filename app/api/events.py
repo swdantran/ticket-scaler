@@ -85,3 +85,4 @@ async def list_event_seats(
     seats = seat_result.mappings().all()
 
     return seats
+
