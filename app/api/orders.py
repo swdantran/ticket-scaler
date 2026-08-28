@@ -152,6 +152,7 @@ async def create_order(
                 "event_type": "order.confirmed",
                 "payload": json.dumps(
                     {
+                        "event_id": str(outbox_event_id),
                         "order_id": str(order_id),
                         "user_id": request.user_id,
                         "reservation_id": request.reservation_id,

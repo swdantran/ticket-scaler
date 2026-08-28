@@ -43,11 +43,11 @@ services:
       - "0"
       - --check=false
       - --kafka-addr
-      - PLAINTEXT://0.0.0.0:9093
+      - internal://0.0.0.0:9092,external://0.0.0.0:19092
       - --advertise-kafka-addr
-      - PLAINTEXT://localhost:9093
+      - internal://redpanda:9092,external://localhost:9093
     ports:
-      - "9093:9092"
+      - "9093:19092"
 
 volumes:
   postgres_data:

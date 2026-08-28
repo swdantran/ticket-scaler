@@ -8,12 +8,13 @@ async def publish_order_confirmed(order: dict):
         bootstrap_servers=settings.kafka_bootstrap_servers,
     )
 
-    await producer.start()
-
     try:
+        await producer.start()
+
         await producer.send_and_wait(
             "order-confirmed",
             json.dumps(order).encode("utf-8"),
         )
+
     finally:
         await producer.stop()
