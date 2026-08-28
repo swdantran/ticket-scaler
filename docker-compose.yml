@@ -2,18 +2,12 @@ services:
   postgres:
     image: postgres:16
     container_name: ticket-postgres
-
     environment:
       POSTGRES_USER: ticket
       POSTGRES_PASSWORD: ticket
       POSTGRES_DB: ticketdb
-
-    ports:
-      - "5434:5432"
-
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ticket -d ticketdb"]
       interval: 5s
@@ -48,6 +42,52 @@ services:
       - internal://redpanda:9092,external://localhost:9093
     ports:
       - "9093:19092"
+
+  api:
+    build: .
+    container_name: ticket-api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    environment:
+      DATABASE_URL: postgresql+asyncpg://ticket:ticket@postgres:5432/ticketdb
+      REDIS_URL: redis://redis:6379
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      redpanda:
+        condition: service_started
+
+  outbox-worker:
+    build: .
+    container_name: ticket-outbox-worker
+    command: python -m app.workers.outbox_worker
+    environment:
+      DATABASE_URL: postgresql+asyncpg://ticket:ticket@postgres:5432/ticketdb
+      REDIS_URL: redis://redis:6379
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_started
+
+  order-consumer:
+    build: .
+    container_name: ticket-order-consumer
+    command: python -m app.workers.order_consumer
+    environment:
+      DATABASE_URL: postgresql+asyncpg://ticket:ticket@postgres:5432/ticketdb
+      REDIS_URL: redis://redis:6379
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_started
 
 volumes:
   postgres_data:
