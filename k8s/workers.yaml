@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: outbox-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: outbox-worker
+  template:
+    metadata:
+      labels:
+        app: outbox-worker
+    spec:
+      containers:
+        - name: outbox-worker
+          image: ticket-api:dev
+          imagePullPolicy: IfNotPresent
+
+          command:
+            - python
+            - -u
+            - -m
+            - app.workers.outbox_worker
+
+          env:
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://ticket:ticket@postgres:5432/ticketdb"
+
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "redpanda:9092"
+
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-consumer
+  template:
+    metadata:
+      labels:
+        app: order-consumer
+    spec:
+      containers:
+        - name: order-consumer
+          image: ticket-api:dev
+          imagePullPolicy: IfNotPresent
+
+          command:
+            - python
+            - -u
+            - -m
+            - app.workers.order_consumer
+
+          env:
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://ticket:ticket@postgres:5432/ticketdb"
+
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "redpanda:9092"
+
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"

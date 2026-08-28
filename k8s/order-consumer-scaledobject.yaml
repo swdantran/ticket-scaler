@@ -1,0 +1,22 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: order-consumer-scaler
+spec:
+  scaleTargetRef:
+    name: order-consumer
+
+  minReplicaCount: 1
+  maxReplicaCount: 10
+
+  pollingInterval: 5
+  cooldownPeriod: 30
+
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: redpanda.default.svc.cluster.local:9092
+        consumerGroup: order-workers
+        topic: order-confirmed
+        lagThreshold: "5"
+        offsetResetPolicy: earliest
