@@ -23,3 +23,18 @@ async def health() -> dict[str, str]:
             "service": "booking api",
             "database": "connected",
             } 
+
+@app.get("/livez")
+async def livez():
+    return {"status": "alive"}
+
+
+@app.get("/readyz")
+async def readyz():
+    async with engine.connect() as connection:
+        await connection.execute(text("SELECT 1"))
+
+    return {
+        "status": "ready",
+        "database": "connected",
+    }
