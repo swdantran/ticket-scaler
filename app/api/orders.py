@@ -1,3 +1,4 @@
+import json
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -126,6 +127,36 @@ async def create_order(
                 "user_id": request.user_id,
                 "reservation_id": request.reservation_id,
                 "idempotency_key": request.idempotency_key,
+            },
+        )
+
+        outbox_event_id = uuid4()
+
+        await db.execute(
+            text(
+                """
+                INSERT INTO outbox_events (
+                    id,
+                    event_type,
+                    payload
+                )
+                VALUES (
+                    :id,
+                    :event_type,
+                    CAST(:payload AS JSONB)
+                );
+                """
+            ),
+            {
+                "id": outbox_event_id,
+                "event_type": "order.confirmed",
+                "payload": json.dumps(
+                    {
+                        "order_id": str(order_id),
+                        "user_id": request.user_id,
+                        "reservation_id": request.reservation_id,
+                    }
+                ),
             },
         )
 
